@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useT } from '../i18n';
 
 export default function AuthModal() {
   const app = useApp();
+  const t = useT();
   const initialTab = app.authModal === 'signup' ? 'signup' : 'signin';
   const [tab, setTab] = useState(initialTab);
   const [forgot, setForgot] = useState(false);
@@ -28,12 +30,12 @@ export default function AuthModal() {
   return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && close()}>
       <div className="glass modal modal--sm anim-pop-in">
-        <button className="modal__close" onClick={close} aria-label="Close"><X size={18} /></button>
+        <button className="modal__close" onClick={close} aria-label={t('Close')}><X size={18} /></button>
         {!forgot ? (
           <>
             <div className="auth-tabs">
-              <TabBtn active={tab === 'signin'} onClick={() => setTab('signin')}>Login</TabBtn>
-              <TabBtn active={tab === 'signup'} onClick={() => setTab('signup')}>Register</TabBtn>
+              <TabBtn active={tab === 'signin'} onClick={() => setTab('signin')}>{t('Login')}</TabBtn>
+              <TabBtn active={tab === 'signup'} onClick={() => setTab('signup')}>{t('Register')}</TabBtn>
             </div>
             <div className="modal__body">
               {tab === 'signin' && <SignInForm onSuccess={afterLoginSuccess} onForgot={() => setForgot(true)} />}
@@ -67,10 +69,11 @@ function Err({ children }) {
 }
 
 function PasswordField({ label, value, onChange, placeholder, id }) {
+  const t = useT();
   const [visible, setVisible] = useState(false);
   return (
     <label>
-      <span className="field-label">{label}</span>
+      <span className="field-label">{t(label)}</span>
       <div className="password-field">
         <input
           id={id}
@@ -85,7 +88,7 @@ function PasswordField({ label, value, onChange, placeholder, id }) {
           type="button"
           className="password-toggle"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-label={visible ? t('Hide password') : t('Show password')}
         >
           {visible ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
@@ -96,6 +99,7 @@ function PasswordField({ label, value, onChange, placeholder, id }) {
 
 function SignInForm({ onSuccess, onForgot }) {
   const app = useApp();
+  const t = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -103,20 +107,20 @@ function SignInForm({ onSuccess, onForgot }) {
   function submit(e) {
     e.preventDefault();
     const res = app.login(email, password);
-    if (!res.ok) return setError(res.message);
+    if (!res.ok) return setError(t(res.message));
     onSuccess();
   }
 
   return (
     <form className="auth-form" onSubmit={submit}>
-      <h3 className="auth-form__title">Welcome back</h3>
-      <p className="auth-form__subtitle">Sign in to search fares, book seats and manage your trips.</p>
-      <label><span className="field-label">Email</span><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="field-input" /></label>
+      <h3 className="auth-form__title">{t('Welcome back')}</h3>
+      <p className="auth-form__subtitle">{t('Sign in to search fares, book seats and manage your trips.')}</p>
+      <label><span className="field-label">{t('Email')}</span><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('you@example.com')} className="field-input" /></label>
       <PasswordField label="Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" />
       <Err>{error}</Err>
       <div className="auth-form__actions">
-        <button type="submit" className="btn-primary">Login</button>
-        <button type="button" className="btn-link" onClick={onForgot}>Forgot Password?</button>
+        <button type="submit" className="btn-primary">{t('Login')}</button>
+        <button type="button" className="btn-link" onClick={onForgot}>{t('Forgot Password?')}</button>
       </div>
     </form>
   );
@@ -124,6 +128,7 @@ function SignInForm({ onSuccess, onForgot }) {
 
 function SignUpForm({ onSuccess, onCancel }) {
   const app = useApp();
+  const t = useT();
   const [form, setForm] = useState({ title: 'Mr', firstName: '', lastName: '', email: '', password: '', confirmPassword: '', dob: '', phone: '' });
   const [error, setError] = useState('');
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -131,29 +136,29 @@ function SignUpForm({ onSuccess, onCancel }) {
   function submit(e) {
     e.preventDefault();
     const res = app.register(form);
-    if (!res.ok) return setError(res.message);
-    app.notify(`Account created \u2014 welcome, ${res.user.firstName}!`);
+    if (!res.ok) return setError(t(res.message));
+    app.notify(t('Account created — welcome, {0}!', res.user.firstName));
     onSuccess();
   }
 
   return (
     <form className="auth-form" onSubmit={submit}>
-      <h3 className="auth-form__title">Create your account</h3>
-      <p className="auth-form__subtitle">Registration is required before booking a flight.</p>
+      <h3 className="auth-form__title">{t('Create your account')}</h3>
+      <p className="auth-form__subtitle">{t('Registration is required before booking a flight.')}</p>
       <div className="auth-form__grid">
-        <label><span className="field-label">Title</span><select value={form.title} onChange={set('title')} className="field-input"><option>Mr</option><option>Ms</option><option>Mrs</option></select></label>
-        <label><span className="field-label">First Name</span><input required value={form.firstName} onChange={set('firstName')} className="field-input" /></label>
-        <label><span className="field-label">Last Name</span><input required value={form.lastName} onChange={set('lastName')} className="field-input" /></label>
-        <label><span className="field-label">Email</span><input type="email" required value={form.email} onChange={set('email')} className="field-input" /></label>
+        <label><span className="field-label">{t('Title')}</span><select value={form.title} onChange={set('title')} className="field-input"><option value="Mr">{t('Mr')}</option><option value="Ms">{t('Ms')}</option><option value="Mrs">{t('Mrs')}</option></select></label>
+        <label><span className="field-label">{t('First Name')}</span><input required value={form.firstName} onChange={set('firstName')} className="field-input" /></label>
+        <label><span className="field-label">{t('Last Name')}</span><input required value={form.lastName} onChange={set('lastName')} className="field-input" /></label>
+        <label><span className="field-label">{t('Email')}</span><input type="email" required value={form.email} onChange={set('email')} className="field-input" /></label>
         <PasswordField label="Password" value={form.password} onChange={set('password')} />
         <PasswordField label="Confirm Password" value={form.confirmPassword} onChange={set('confirmPassword')} />
-        <label><span className="field-label">Date of Birth</span><input type="date" required value={form.dob} onChange={set('dob')} className="field-input" /></label>
-        <label><span className="field-label">Phone Number</span><input required value={form.phone} onChange={set('phone')} placeholder="10-digit number" className="field-input" /></label>
+        <label><span className="field-label">{t('Date of Birth')}</span><input type="date" required value={form.dob} onChange={set('dob')} className="field-input" /></label>
+        <label><span className="field-label">{t('Phone Number')}</span><input required value={form.phone} onChange={set('phone')} placeholder={t('10-digit number')} className="field-input" /></label>
       </div>
       <Err>{error}</Err>
       <div className="auth-form__actions">
-        <button type="submit" className="btn-primary">Sign Up</button>
-        <button type="button" className="btn-link" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn-primary">{t('Sign Up')}</button>
+        <button type="button" className="btn-link" onClick={onCancel}>{t('Cancel')}</button>
       </div>
     </form>
   );
@@ -161,6 +166,7 @@ function SignUpForm({ onSuccess, onCancel }) {
 
 function ForgotPasswordForm({ onDone }) {
   const app = useApp();
+  const t = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -170,28 +176,28 @@ function ForgotPasswordForm({ onDone }) {
   function submit(e) {
     e.preventDefault();
     const res = app.resetPassword(email, password, confirmPassword);
-    if (!res.ok) return setError(res.message);
+    if (!res.ok) return setError(t(res.message));
     setSuccess(true);
   }
 
   return (
     <form className="auth-form" onSubmit={submit}>
-      <h3 className="auth-form__title">Reset password</h3>
+      <h3 className="auth-form__title">{t('Reset password')}</h3>
       {success ? (
         <>
-          <p className="auth-form__subtitle">Your password has been updated. You can now log in with your new password.</p>
-          <div><button type="button" className="btn-primary" onClick={onDone}>Back to Login</button></div>
+          <p className="auth-form__subtitle">{t('Your password has been updated. You can now log in with your new password.')}</p>
+          <div><button type="button" className="btn-primary" onClick={onDone}>{t('Back to Login')}</button></div>
         </>
       ) : (
         <>
-          <p className="auth-form__subtitle">Enter your account email and choose a new password.</p>
-          <label><span className="field-label">Email</span><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field-input" /></label>
+          <p className="auth-form__subtitle">{t('Enter your account email and choose a new password.')}</p>
+          <label><span className="field-label">{t('Email')}</span><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field-input" /></label>
           <PasswordField label="New Password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <PasswordField label="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           <Err>{error}</Err>
           <div className="auth-form__actions">
-            <button type="submit" className="btn-primary">Update Password</button>
-            <button type="button" className="btn-link" onClick={onDone}>Back</button>
+            <button type="submit" className="btn-primary">{t('Update Password')}</button>
+            <button type="button" className="btn-link" onClick={onDone}>{t('Back')}</button>
           </div>
         </>
       )}

@@ -55,3 +55,8 @@ npm run preview
 
 ## Demo accounts
 - Accounts are created via the **Register** tab and stored in your browser's local storage (this is a front-end demo with no backend).
+
+## Language selector (English / हिन्दी)
+- The site opens in English; the **EN | हिं** toggle in the header (also on the info pages and mobile menu) switches language, and the choice is remembered (`skylink_lang` in localStorage).
+- Everything is translated except the brand name "SkyLink". Code: `src/i18n.jsx` (provider, `useT()`, picker, toggle) and `src/locales/hi.js` (dictionary keyed by the English string; `{0}` placeholders). To add or change a Hindi string, edit `hi.js`; a missing key simply falls back to English.
+- The Admin Dashboard (`#/admin`) is staff-only and stays in English.

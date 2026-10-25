@@ -193,7 +193,7 @@ export function AppProvider({ children }) {
     if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
       return { ok: false, message: 'An account with this email already exists.' };
     }
-    if (!validatePhone(phone)) return { ok: false, message: 'Please enter a valid 10-digit phone number. Number should be started with 6,7,8' };
+    if (!validatePhone(phone)) return { ok: false, message: 'Please enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.' };
     if (!dob) return { ok: false, message: 'Please enter your date of birth.' };
     const pwCheck = validatePassword(password);
     if (!pwCheck.valid) return { ok: false, message: `Password needs ${pwCheck.errors.join(', ')}.` };
@@ -401,7 +401,7 @@ export function AppProvider({ children }) {
         nextContact.email = contact.email.trim();
       }
       if (contact.phone !== undefined) {
-        if (!validatePhone(contact.phone)) return { ok: false, message: 'Please enter a valid 10-digit phone number.' };
+        if (!validatePhone(contact.phone)) return { ok: false, message: 'Please enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.' };
         nextContact.phone = contact.phone.replace(/\D/g, '');
       }
     }

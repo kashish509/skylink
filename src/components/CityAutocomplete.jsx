@@ -1,8 +1,10 @@
 import React, { useId, useMemo, useState } from 'react';
 import { Plane, TrendingUp } from 'lucide-react';
 import { searchAirports } from '../data/airports';
+import { useT } from '../i18n';
 
 export default function CityAutocomplete({ label, value, onChange, onSelect, placeholder, autoFocus }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const listId = useId();
@@ -44,10 +46,10 @@ export default function CityAutocomplete({ label, value, onChange, onSelect, pla
       {open && (
         <div id={listId} className="city-dropdown anim-drop-in">
           <div className="city-dropdown__header">
-            {isEmpty ? <><TrendingUp size={11} /> Popular destinations</> : <>Suggestions</>}
+            {isEmpty ? <><TrendingUp size={11} /> {t('Popular destinations')}</> : <>{t('Suggestions')}</>}
           </div>
           {results.length === 0 ? (
-            <p className="city-dropdown__empty">No matches &mdash; try a city or airport code.</p>
+            <p className="city-dropdown__empty">{t('No matches — try a city or airport code.')}</p>
           ) : (
             <ul className="city-dropdown__list">
               {results.map((a, i) => (
@@ -64,10 +66,10 @@ export default function CityAutocomplete({ label, value, onChange, onSelect, pla
                     </span>
                     <span className="city-option__body">
                       <span className="city-option__row">
-                        <b className="city-option__city">{a.city}</b>
-                        <span className="city-option__country">{a.country}</span>
+                        <b className="city-option__city">{t(a.city)}</b>
+                        <span className="city-option__country">{t(a.country)}</span>
                       </span>
-                      <span className="city-option__airport">{a.airport}</span>
+                      <span className="city-option__airport">{t(a.airport)}</span>
                     </span>
                     <span className="city-option__code">{a.code}</span>
                   </button>

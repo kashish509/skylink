@@ -1,6 +1,8 @@
 // Airport/city dataset for the From/To autocomplete. `popular` entries show
 // up when a field is empty; everything is matched by city, country, code,
 // or airport name while typing.
+import { tr } from '../i18n';
+
 export const airports = [
   { code: 'DEL', city: 'Delhi', country: 'India', airport: 'Indira Gandhi International', popular: true, lat: 28.5665, lon: 77.1031, tz: 5.5 },
   { code: 'BOM', city: 'Mumbai', country: 'India', airport: 'Chhatrapati Shivaji Maharaj International', popular: true, lat: 19.0887, lon: 72.8679, tz: 5.5 },
@@ -50,8 +52,9 @@ export function searchAirports(query, { limit = 6 } = {}) {
   const starts = [];
   const contains = [];
   for (const a of airports) {
-    const hay = `${a.city} ${a.code} ${a.country} ${a.airport}`.toLowerCase();
-    if (a.city.toLowerCase().startsWith(q) || a.code.toLowerCase().startsWith(q)) starts.push(a);
+    const hiCity = tr(a.city);
+    const hay = `${a.city} ${hiCity} ${a.code} ${a.country} ${tr(a.country)} ${a.airport} ${tr(a.airport)}`.toLowerCase();
+    if (a.city.toLowerCase().startsWith(q) || hiCity.toLowerCase().startsWith(q) || a.code.toLowerCase().startsWith(q)) starts.push(a);
     else if (hay.includes(q)) contains.push(a);
   }
   return [...starts, ...contains].slice(0, limit);
@@ -80,7 +83,7 @@ export function resolveCode(query, selectedCode) {
   }
 
   const exact = airports.find(
-    (a) => a.code.toLowerCase() === q.toLowerCase() || a.city.toLowerCase() === q.toLowerCase()
+    (a) => a.code.toLowerCase() === q.toLowerCase() || a.city.toLowerCase() === q.toLowerCase() || tr(a.city).toLowerCase() === q.toLowerCase()
   );
   if (exact) return exact.code;
   return q.toUpperCase();

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Sparkles, Star } from 'lucide-react';
+import { useT } from '../i18n';
 import heroImage from '../assets/skylink-hero.png';
 
 const stats = [
@@ -9,6 +10,7 @@ const stats = [
 ];
 
 export default function CinematicHero() {
+  const t = useT();
   return (
     <section className="hero">
       <div className="hero__bg" style={{ backgroundImage: `url(${heroImage})` }} />
@@ -19,10 +21,10 @@ export default function CinematicHero() {
         <div className="hero__content anim-fade-in-up">
           <span className="label-eyebrow">SkyLink</span>
           <h1 className="hero__title text-balance">
-            Where will you go next?
+            {t('Where will you go next?')}
           </h1>
           <p className="hero__subtitle">
-            Search, compare and book flights in seconds &mdash; a calmer, faster way to find your next departure.
+            {t('Search, compare and book flights in seconds — a calmer, faster way to find your next departure.')}
           </p>
 
           <div className="hero__stats anim-fade-in-up" style={{ animationDelay: '0.25s' }}>
@@ -30,7 +32,7 @@ export default function CinematicHero() {
               const Icon = s.icon;
               return (
                 <span key={s.label} className="hero__stat">
-                  <Icon size={14} className="icon-ice" /> {s.label}
+                  <Icon size={14} className="icon-ice" /> {t(s.label)}
                 </span>
               );
             })}

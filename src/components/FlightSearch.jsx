@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeftRight, CalendarDays, Minus, Plus, Search, Users2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import FlightResults from './FlightResults';
 import BookingModal from './BookingModal';
 import CityAutocomplete from './CityAutocomplete';
-import { resolveCode } from '../data/airports';
+import { resolveCode, airportByCode } from '../data/airports';
+import { useLang, tr } from '../i18n';
 import { addDays, toDateInput, uid, formatINR } from '../lib/utils';
 
 const todayInput = toDateInput(new Date());
@@ -40,24 +41,31 @@ function newLeg(overrides = {}) {
   };
 }
 
+// "Delhi (DEL)" in English, "दिल्ली (DEL)" in Hindi.
+function cityLabel(code) {
+  const a = airportByCode(code);
+  return a ? `${tr(a.city)} (${a.code})` : code;
+}
+
 function defaultLegs() {
   return [
-    newLeg({ fromQuery: 'Delhi (DEL)', fromCode: 'DEL', toQuery: 'London (LHR)', toCode: 'LHR', date: defaultDepart }),
-    newLeg({ fromQuery: 'London (LHR)', fromCode: 'LHR', toQuery: 'Paris (CDG)', toCode: 'CDG', date: toDateInput(addDays(new Date(), 10)) }),
+    newLeg({ fromQuery: cityLabel('DEL'), fromCode: 'DEL', toQuery: cityLabel('LHR'), toCode: 'LHR', date: defaultDepart }),
+    newLeg({ fromQuery: cityLabel('LHR'), fromCode: 'LHR', toQuery: cityLabel('CDG'), toCode: 'CDG', date: toDateInput(addDays(new Date(), 10)) }),
   ];
 }
 
 // Shared passengers stepper, used both by the Round Trip/One Way grid and
 // the Multi-City footer so the two layouts don't duplicate the dropdown logic.
 function PassengerField({ adults, setAdults, children, setChildren, passengersOpen, setPassengersOpen }) {
+  const { t } = useLang();
   return (
     <div className="passenger-field">
       <Users2 size={16} className="search-field__icon" />
       <button type="button" className="passenger-trigger" onClick={() => setPassengersOpen((v) => !v)}>
-        <span className="field-label field-label--tight">Passengers</span>
+        <span className="field-label field-label--tight">{t('Passengers')}</span>
         <b className="passenger-summary">
-          {adults} Adult{adults > 1 ? 's' : ''}
-          {children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}
+          {adults} {t(adults > 1 ? 'Adults' : 'Adult')}
+          {children > 0 ? `, ${children} ${t(children > 1 ? 'Children' : 'Child')}` : ''}
         </b>
       </button>
 
@@ -67,8 +75,8 @@ function PassengerField({ adults, setAdults, children, setChildren, passengersOp
           <div className="passenger-dropdown anim-drop-in">
             <div className="passenger-row">
               <span className="passenger-row__labels">
-                <b className="passenger-row__title">Adults</b>
-                <span className="passenger-row__hint">12 yrs & above</span>
+                <b className="passenger-row__title">{t('Adults')}</b>
+                <span className="passenger-row__hint">{t('12 yrs & above')}</span>
               </span>
               <div className="passenger-row__controls">
                 <button type="button" className="stepper-btn" disabled={adults <= 1} onClick={() => setAdults(Math.max(1, adults - 1))}>
@@ -82,8 +90,8 @@ function PassengerField({ adults, setAdults, children, setChildren, passengersOp
             </div>
             <div className="passenger-row passenger-row--bordered">
               <span className="passenger-row__labels">
-                <b className="passenger-row__title">Children</b>
-                <span className="passenger-row__hint">2–11 yrs</span>
+                <b className="passenger-row__title">{t('Children')}</b>
+                <span className="passenger-row__hint">{t('2–11 yrs')}</span>
               </span>
               <div className="passenger-row__controls">
                 <button type="button" className="stepper-btn" disabled={children <= 0} onClick={() => setChildren(Math.max(0, children - 1))}>
@@ -96,7 +104,7 @@ function PassengerField({ adults, setAdults, children, setChildren, passengersOp
               </div>
             </div>
             <button type="button" className="btn-primary passenger-done-btn" onClick={() => setPassengersOpen(false)}>
-              Done
+              {t('Done')}
             </button>
           </div>
         </>
@@ -107,12 +115,13 @@ function PassengerField({ adults, setAdults, children, setChildren, passengersOp
 
 export default function FlightSearch() {
   const app = useApp();
+  const { t, lang } = useLang();
   const [tab, setTab] = useState('Round Trip');
 
   // Round Trip / One Way fields
-  const [fromQuery, setFromQuery] = useState('Delhi (DEL)');
+  const [fromQuery, setFromQuery] = useState(() => cityLabel('DEL'));
   const [fromCode, setFromCode] = useState('DEL');
-  const [toQuery, setToQuery] = useState('London (LHR)');
+  const [toQuery, setToQuery] = useState(() => cityLabel('LHR'));
   const [toCode, setToCode] = useState('LHR');
   const [departDate, setDepartDate] = useState(defaultDepart);
   const [returnDate, setReturnDate] = useState(defaultReturn);
@@ -127,8 +136,20 @@ export default function FlightSearch() {
   const [results, setResults] = useState(null);
   const [activeBooking, setActiveBooking] = useState(null); // { flight, cls }
 
-  function switchTab(t) {
-    setTab(t);
+  // When the language changes, re-label every field that holds a chosen airport.
+  useEffect(() => {
+    if (fromCode) setFromQuery(cityLabel(fromCode));
+    if (toCode) setToQuery(cityLabel(toCode));
+    setLegs((prev) => prev.map((l) => ({
+      ...l,
+      fromQuery: l.fromCode ? cityLabel(l.fromCode) : l.fromQuery,
+      toQuery: l.toCode ? cityLabel(l.toCode) : l.toQuery,
+    })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
+  function switchTab(name) {
+    setTab(name);
     setResults(null);
   }
 
@@ -207,32 +228,32 @@ export default function FlightSearch() {
         <div className="glass search-card">
           <div className="search-tabs-row">
             <div className="search-tabs">
-              {TABS.map((t) => (
+              {TABS.map((name) => (
                 <button
-                  key={t}
-                  className={`search-tab ${tab === t ? 'search-tab--active' : ''}`}
-                  onClick={() => switchTab(t)}
+                  key={name}
+                  className={`search-tab ${tab === name ? 'search-tab--active' : ''}`}
+                  onClick={() => switchTab(name)}
                 >
-                  {t}
+                  {t(name)}
                 </button>
               ))}
             </div>
             <span className="live-search">
-              <span className="live-search__dot" /> LIVE SEARCH
+              <span className="live-search__dot" /> {t('LIVE SEARCH')}
             </span>
           </div>
 
           {!isMultiCity && (
             <div className="search-grid">
               <div className="search-field">
-                <CityAutocomplete label="From" value={fromQuery} onChange={(v) => { setFromQuery(v); setFromCode(''); }} onSelect={(a) => { setFromQuery(`${a.city} (${a.code})`); setFromCode(a.code); }} placeholder="Delhi (DEL)" />
-                <button type="button" onClick={swap} aria-label="Swap airports" className="swap-btn">
+                <CityAutocomplete label={t('From')} value={fromQuery} onChange={(v) => { setFromQuery(v); setFromCode(''); }} onSelect={(a) => { setFromQuery(`${t(a.city)} (${a.code})`); setFromCode(a.code); }} placeholder={cityLabel('DEL')} />
+                <button type="button" onClick={swap} aria-label={t('Swap airports')} className="swap-btn">
                   <ArrowLeftRight size={15} />
                 </button>
               </div>
               <div className="search-field">
-                <CityAutocomplete label="To" value={toQuery} onChange={(v) => { setToQuery(v); setToCode(''); }} onSelect={(a) => { setToQuery(`${a.city} (${a.code})`); setToCode(a.code); }} placeholder="London (LHR)" />
-                <button type="button" onClick={swap} aria-label="Swap airports" className="swap-btn swap-btn--mobile">
+                <CityAutocomplete label={t('To')} value={toQuery} onChange={(v) => { setToQuery(v); setToCode(''); }} onSelect={(a) => { setToQuery(`${t(a.city)} (${a.code})`); setToCode(a.code); }} placeholder={cityLabel('LHR')} />
+                <button type="button" onClick={swap} aria-label={t('Swap airports')} className="swap-btn swap-btn--mobile">
                   <ArrowLeftRight size={14} />
                 </button>
               </div>
@@ -240,14 +261,14 @@ export default function FlightSearch() {
               <label className="date-field">
                 <CalendarDays size={16} className="search-field__icon" />
                 <span className="date-field__stack">
-                  <span className="field-label field-label--tight">Departure</span>
+                  <span className="field-label field-label--tight">{t('Departure')}</span>
                   <input type="date" min={todayInput} value={departDate} onChange={(e) => setDepartDate(e.target.value)} className="date-field__input" />
                 </span>
               </label>
               <label className="date-field">
                 <CalendarDays size={16} className="search-field__icon" />
                 <span className="date-field__stack">
-                  <span className="field-label field-label--tight">Return</span>
+                  <span className="field-label field-label--tight">{t('Return')}</span>
                   <input
                     type="date"
                     min={departDate}
@@ -262,7 +283,7 @@ export default function FlightSearch() {
               <PassengerField adults={adults} setAdults={setAdults} children={children} setChildren={setChildren} passengersOpen={passengersOpen} setPassengersOpen={setPassengersOpen} />
 
               <button className="btn-primary search-submit" onClick={handleSearch}>
-                <Search size={16} />Search Flights
+                <Search size={16} />{t('Search Flights')}
               </button>
             </div>
           )}
@@ -273,26 +294,26 @@ export default function FlightSearch() {
                 <div className="leg-grid" key={leg.id}>
                   <div className="search-field">
                     <CityAutocomplete
-                      label={`Flight ${i + 1} · From`}
+                      label={t('Flight {0} · From', i + 1)}
                       value={leg.fromQuery}
                       onChange={(v) => updateLeg(leg.id, { fromQuery: v, fromCode: '' })}
-                      onSelect={(a) => updateLeg(leg.id, { fromQuery: `${a.city} (${a.code})`, fromCode: a.code })}
-                      placeholder="Delhi (DEL)"
+                      onSelect={(a) => updateLeg(leg.id, { fromQuery: `${t(a.city)} (${a.code})`, fromCode: a.code })}
+                      placeholder={cityLabel('DEL')}
                     />
                   </div>
                   <div className="search-field">
                     <CityAutocomplete
-                      label="To"
+                      label={t('To')}
                       value={leg.toQuery}
                       onChange={(v) => updateLeg(leg.id, { toQuery: v, toCode: '' })}
-                      onSelect={(a) => updateLeg(leg.id, { toQuery: `${a.city} (${a.code})`, toCode: a.code })}
-                      placeholder="London (LHR)"
+                      onSelect={(a) => updateLeg(leg.id, { toQuery: `${t(a.city)} (${a.code})`, toCode: a.code })}
+                      placeholder={cityLabel('LHR')}
                     />
                   </div>
                   <label className="date-field">
                     <CalendarDays size={16} className="search-field__icon" />
                     <span className="date-field__stack">
-                      <span className="field-label field-label--tight">Departure</span>
+                      <span className="field-label field-label--tight">{t('Departure')}</span>
                       <input
                         type="date"
                         min={i === 0 ? todayInput : legs[i - 1].date}
@@ -303,7 +324,7 @@ export default function FlightSearch() {
                     </span>
                   </label>
                   {legs.length > 2 ? (
-                    <button type="button" className="leg-remove-btn" aria-label={`Remove flight ${i + 1}`} onClick={() => removeLeg(leg.id)}>
+                    <button type="button" className="leg-remove-btn" aria-label={t('Remove flight {0}', i + 1)} onClick={() => removeLeg(leg.id)}>
                       <X size={16} />
                     </button>
                   ) : (
@@ -313,13 +334,13 @@ export default function FlightSearch() {
               ))}
 
               <button type="button" className="add-leg-row" disabled={legs.length >= MAX_LEGS} onClick={addLeg}>
-                <Plus size={14} /> Add another flight
+                <Plus size={14} /> {t('Add another flight')}
               </button>
 
               <div className="multicity-footer-grid">
                 <PassengerField adults={adults} setAdults={setAdults} children={children} setChildren={setChildren} passengersOpen={passengersOpen} setPassengersOpen={setPassengersOpen} />
                 <button className="btn-primary search-submit" onClick={handleSearch}>
-                  <Search size={16} />Search Flights
+                  <Search size={16} />{t('Search Flights')}
                 </button>
               </div>
             </div>
@@ -331,7 +352,7 @@ export default function FlightSearch() {
             <FlightResults flights={results.outbound} passengerCount={passengers} onSelect={handleSelect} />
           ) : (
             <p className="no-results">
-              No flights found for that route yet. Try clearing the search. <button className="btn-link" onClick={handleClear}>Clear</button>
+              {t('No flights found for that route yet. Try clearing the search.')} <button className="btn-link" onClick={handleClear}>{t('Clear')}</button>
             </p>
           )
         )}
@@ -340,14 +361,14 @@ export default function FlightSearch() {
           <>
             
             {results.outbound.length ? (
-              <FlightResults title={`Onward · ${results.from} → ${results.to}`} flights={results.outbound} passengerCount={passengers} onSelect={handleSelect} />
+              <FlightResults title={t('Onward · {0} → {1}', results.from, results.to)} flights={results.outbound} passengerCount={passengers} onSelect={handleSelect} />
             ) : (
-              <p className="no-results">No onward flights found for {results.from} → {results.to}.</p>
+              <p className="no-results">{t('No onward flights found for {0} → {1}.', results.from, results.to)}</p>
             )}
             {results.inbound.length ? (
-              <FlightResults title={`Return · ${results.to} → ${results.from}`} flights={results.inbound} passengerCount={passengers} onSelect={handleSelect} />
+              <FlightResults title={t('Return · {0} → {1}', results.to, results.from)} flights={results.inbound} passengerCount={passengers} onSelect={handleSelect} />
             ) : (
-              <p className="no-results">No return flights found for {results.to} → {results.from}.</p>
+              <p className="no-results">{t('No return flights found for {0} → {1}.', results.to, results.from)}</p>
             )}
           </>
         )}
@@ -356,9 +377,9 @@ export default function FlightSearch() {
           <>
             {results.legs.map((leg, i) => (
               leg.found.length ? (
-                <FlightResults key={i} title={`Flight ${i + 1} · ${leg.from} → ${leg.to}`} flights={leg.found} passengerCount={passengers} onSelect={handleSelect} />
+                <FlightResults key={i} title={t('Flight {0} · {1} → {2}', i + 1, leg.from, leg.to)} flights={leg.found} passengerCount={passengers} onSelect={handleSelect} />
               ) : (
-                <p className="no-results" key={i}>No flights found for Flight {i + 1}: {leg.from} → {leg.to}.</p>
+                <p className="no-results" key={i}>{t('No flights found for Flight {0}: {1} → {2}.', i + 1, leg.from, leg.to)}</p>
               )
             ))}
           </>

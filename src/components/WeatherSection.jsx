@@ -3,6 +3,7 @@ import { Droplets, RefreshCw, Sunrise, Sunset, Thermometer, Wind, Sun as UvIcon,
 import { airports } from '../data/airports';
 import { useReveal } from '../lib/useReveal';
 import { describe, fetchWeather, formatTemp, formatWind, travelTip } from '../lib/weather';
+import { useLang } from '../i18n';
 
 // Featured cities match the Destinations section; coordinates are city centres.
 const featured = [
@@ -26,10 +27,11 @@ const moreCities = (() => {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 })();
 
-const fmtDay = (iso, i) => (i === 0 ? 'Today' : new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short' }));
+const fmtDay = (iso, i, lang, t) => (i === 0 ? t('Today') : new Date(`${iso}T12:00:00`).toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-GB', { weekday: 'short' }));
 const fmtClock = (iso) => (iso ? iso.slice(11, 16) : '–');
 
 export default function WeatherSection() {
+  const { t, lang } = useLang();
   const [headerRef, headerVisible] = useReveal({ amount: 0.2 });
   const [gridRef, gridVisible] = useReveal({ amount: 0.1 });
   const [city, setCity] = useState(featured[0]);
@@ -64,17 +66,17 @@ export default function WeatherSection() {
 
       <div ref={headerRef} className={`weather__header reveal ${headerVisible ? 'reveal--visible' : ''}`}>
         <div>
-          <span className="label-eyebrow">03 / Weather</span>
+          <span className="label-eyebrow">{t('03 / Weather')}</span>
           <h2 className="weather__title" id="weather-title">
-            Know before<br /><em>you go.</em>
+            {t('Know before')}<br /><em>{t('you go.')}</em>
           </h2>
         </div>
-        <p className="weather__subtitle">Live conditions and a 7-day outlook for the cities we fly to, so you can pack with confidence.</p>
+        <p className="weather__subtitle">{t('Live conditions and a 7-day outlook for the cities we fly to, so you can pack with confidence.')}</p>
       </div>
 
       <div ref={gridRef} className={`reveal ${gridVisible ? 'reveal--visible' : ''}`}>
         <div className="weather__toolbar">
-          <div className="weather__chips" role="group" aria-label="Choose a city">
+          <div className="weather__chips" role="group" aria-label={t('Choose a city')}>
             {featured.map((c) => (
               <button
                 key={c.name}
@@ -83,21 +85,21 @@ export default function WeatherSection() {
                 aria-pressed={city.name === c.name}
                 onClick={() => setCity(c)}
               >
-                {c.name}
+                {t(c.name)}
               </button>
             ))}
             <label className="weather-select">
-              <span className="sr-only">More cities</span>
+              <span className="sr-only">{t('More cities')}</span>
               <select
                 value={featured.some((f) => f.name === city.name) ? '' : city.name}
                 onChange={(e) => { const c = moreCities.find((m) => m.name === e.target.value); if (c) setCity(c); }}
               >
-                <option value="">More cities…</option>
-                {moreCities.map((c) => (<option key={c.name} value={c.name}>{c.name}, {c.country}</option>))}
+                <option value="">{t('More cities…')}</option>
+                {moreCities.map((c) => (<option key={c.name} value={c.name}>{t(c.name)}, {t(c.country)}</option>))}
               </select>
             </label>
           </div>
-          <div className="weather-unit" role="group" aria-label="Temperature unit">
+          <div className="weather-unit" role="group" aria-label={t('Temperature unit')}>
             {['C', 'F'].map((u) => (
               <button key={u} type="button" className={unit === u ? 'weather-unit__btn weather-unit__btn--active' : 'weather-unit__btn'} aria-pressed={unit === u} onClick={() => setUnit(u)}>°{u}</button>
             ))}
@@ -108,10 +110,10 @@ export default function WeatherSection() {
           <div className="glass weather-card weather-error" role="alert">
             <WifiOff size={26} className="icon-ice" />
             <div>
-              <b>Weather unavailable</b>
-              <p>{state.error} Please check your connection and try again.</p>
+              <b>{t('Weather unavailable')}</b>
+              <p>{t(state.error)} {t('Please check your connection and try again.')}</p>
             </div>
-            <button type="button" className="btn-outline" onClick={load}><RefreshCw size={14} /> Retry</button>
+            <button type="button" className="btn-outline" onClick={load}><RefreshCw size={14} /> {t('Retry')}</button>
           </div>
         )}
 
@@ -122,28 +124,28 @@ export default function WeatherSection() {
             <article className="glass weather-card weather-now" aria-live="polite">
               <div className="weather-now__top">
                 <div>
-                  <span className="label-eyebrow">Right now</span>
-                  <h3 className="weather-now__city">{city.name}<small>{city.country}</small></h3>
+                  <span className="label-eyebrow">{t('Right now')}</span>
+                  <h3 className="weather-now__city">{t(city.name)}<small>{t(city.country)}</small></h3>
                 </div>
                 <now.icon size={56} strokeWidth={1.4} className="weather-now__icon" aria-hidden="true" />
               </div>
               <div className="weather-now__temp">
                 {formatTemp(data.current.temp, unit)}
-                <span>{now.label}</span>
+                <span>{t(now.label)}</span>
               </div>
               <dl className="weather-stats">
-                <div><Thermometer size={14} /><dt>Feels like</dt><dd>{formatTemp(data.current.feels, unit)}</dd></div>
-                <div><Droplets size={14} /><dt>Humidity</dt><dd>{data.current.humidity}%</dd></div>
-                <div><Wind size={14} /><dt>Wind</dt><dd>{formatWind(data.current.wind, unit)}</dd></div>
-                <div><UvIcon size={14} /><dt>UV index</dt><dd>{data.current.uv !== null ? Math.round(data.current.uv) : '–'}</dd></div>
-                <div><Sunrise size={14} /><dt>Sunrise</dt><dd>{fmtClock(data.daily[0].sunrise)}</dd></div>
-                <div><Sunset size={14} /><dt>Sunset</dt><dd>{fmtClock(data.daily[0].sunset)}</dd></div>
+                <div><Thermometer size={14} /><dt>{t('Feels like')}</dt><dd>{formatTemp(data.current.feels, unit)}</dd></div>
+                <div><Droplets size={14} /><dt>{t('Humidity')}</dt><dd>{data.current.humidity}%</dd></div>
+                <div><Wind size={14} /><dt>{t('Wind')}</dt><dd>{formatWind(data.current.wind, unit)}</dd></div>
+                <div><UvIcon size={14} /><dt>{t('UV index')}</dt><dd>{data.current.uv !== null ? Math.round(data.current.uv) : '–'}</dd></div>
+                <div><Sunrise size={14} /><dt>{t('Sunrise')}</dt><dd>{fmtClock(data.daily[0].sunrise)}</dd></div>
+                <div><Sunset size={14} /><dt>{t('Sunset')}</dt><dd>{fmtClock(data.daily[0].sunset)}</dd></div>
               </dl>
-              <p className="weather-tip"><Lightbulb size={15} /> {travelTip(data)}</p>
+              <p className="weather-tip"><Lightbulb size={15} /> {t(travelTip(data))}</p>
             </article>
 
             <article className="glass weather-card weather-week">
-              <span className="label-eyebrow">7-day outlook</span>
+              <span className="label-eyebrow">{t('7-day outlook')}</span>
               <ul className="weather-week__list">
                 {data.daily.map((d, i) => {
                   const info = describe(d.code);
@@ -152,9 +154,9 @@ export default function WeatherSection() {
                   const width = Math.max(((d.max - d.min) / span) * 100, 8);
                   return (
                     <li key={d.date} className="weather-day">
-                      <span className="weather-day__name">{fmtDay(d.date, i)}</span>
-                      <info.icon size={20} strokeWidth={1.6} className="weather-day__icon" aria-label={info.label} />
-                      <span className="weather-day__rain" title="Chance of precipitation"><Droplets size={11} />{d.rainChance ?? 0}%</span>
+                      <span className="weather-day__name">{fmtDay(d.date, i, lang, t)}</span>
+                      <info.icon size={20} strokeWidth={1.6} className="weather-day__icon" aria-label={t(info.label)} />
+                      <span className="weather-day__rain" title={t('Chance of precipitation')}><Droplets size={11} />{d.rainChance ?? 0}%</span>
                       <span className="weather-day__lo">{formatTemp(d.min, unit)}</span>
                       <span className="weather-day__bar" aria-hidden="true"><i style={{ left: `${left}%`, width: `${Math.min(width, 100 - left)}%` }} /></span>
                       <span className="weather-day__hi">{formatTemp(d.max, unit)}</span>
@@ -166,15 +168,16 @@ export default function WeatherSection() {
           </div>
         )}
 
-        <p className="weather__credit">Forecast data by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Conditions are indicative; always check official sources before travel.</p>
+        <p className="weather__credit">{t('Forecast data by')} <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. {t('Conditions are indicative; always check official sources before travel.')}</p>
       </div>
     </section>
   );
 }
 
 function WeatherSkeleton() {
+  const { t } = useLang();
   return (
-    <div className="weather__grid" aria-busy="true" aria-label="Loading weather">
+    <div className="weather__grid" aria-busy="true" aria-label={t('Loading weather')}>
       <div className="glass weather-card skeleton-card">
         <i className="skeleton skeleton--sm" />
         <i className="skeleton skeleton--lg" />

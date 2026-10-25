@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Compass, HeartHandshake, Plus, SlidersHorizontal } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useReveal } from '../lib/useReveal';
+import { useT } from '../i18n';
 
 const items = [
   {
@@ -29,6 +30,7 @@ const items = [
 
 export default function WhySkyLink() {
   const app = useApp();
+  const t = useT();
   const [active, setActive] = useState(0);
   const [headerRef, headerVisible] = useReveal({ amount: 0.2 });
   const [ctaRef, ctaVisible] = useReveal({ amount: 0.3 });
@@ -37,9 +39,9 @@ export default function WhySkyLink() {
     <>
       <section className="why" id="experience">
         <div ref={headerRef} className={`reveal ${headerVisible ? 'reveal--visible' : ''}`}>
-          <span className="why__eyebrow">04 / The SkyLink Way</span>
+          <span className="why__eyebrow">{t('04 / The SkyLink Way')}</span>
           <h2 className="why__title">
-            Travel, thoughtfully<br /><em>connected.</em>
+            {t('Travel, thoughtfully')}<br /><em>{t('connected.')}</em>
           </h2>
         </div>
 
@@ -64,16 +66,16 @@ export default function WhySkyLink() {
       <section className="cta">
         <div className="cta__glow" />
         <div ref={ctaRef} className={`cta__content reveal ${ctaVisible ? 'reveal--visible' : ''}`}>
-          <span className="label-eyebrow">Secure Booking &middot; Flexible Options &middot; Global Destinations</span>
+          <span className="label-eyebrow">{t('Secure Booking · Flexible Options · Global Destinations')}</span>
           <h2 className="cta__title">
-            Less time planning.<br /><em>More time going.</em>
+            {t('Less time planning.')}<br /><em>{t('More time going.')}</em>
           </h2>
           <p className="cta__subtitle">
-            SkyLink brings modern flight discovery and reservation into one seamless experience.
+            {t('SkyLink brings modern flight discovery and reservation into one seamless experience.')}
           </p>
           <div className="cta__actions">
-            <a href="#flights" className="btn-primary">Search Flights <ArrowRight size={15} /></a>
-            <button className="btn-outline" onClick={() => app.setEnquiryOpen(true)}>Track a Booking</button>
+            <a href="#flights" className="btn-primary">{t('Search Flights')} <ArrowRight size={15} /></a>
+            <button className="btn-outline" onClick={() => app.setEnquiryOpen(true)}>{t('Track a Booking')}</button>
           </div>
         </div>
       </section>
@@ -82,6 +84,7 @@ export default function WhySkyLink() {
 }
 
 function WhyCard({ item, Icon, index, isOpen, onToggle }) {
+  const t = useT();
   const [ref, visible] = useReveal({ amount: 0.2 });
   return (
     <button
@@ -97,8 +100,8 @@ function WhyCard({ item, Icon, index, isOpen, onToggle }) {
         </span>
         <span className="why-card__id">{item.id}</span>
       </div>
-      <h3 className="why-card__title">{item.title}</h3>
-      <p className="why-card__summary">{item.summary}</p>
+      <h3 className="why-card__title">{t(item.title)}</h3>
+      <p className="why-card__summary">{t(item.summary)}</p>
 
       <div className={`why-card__details ${isOpen ? 'why-card__details--open' : ''}`}>
         <div>
@@ -106,7 +109,7 @@ function WhyCard({ item, Icon, index, isOpen, onToggle }) {
             {item.points.map((p) => (
               <li key={p} className="why-card__point">
                 <ArrowRight size={13} className="icon-ice" />
-                {p}
+                {t(p)}
               </li>
             ))}
           </ul>
@@ -115,7 +118,7 @@ function WhyCard({ item, Icon, index, isOpen, onToggle }) {
 
       <span className="why-card__toggle">
         <Plus size={14} className={`why-card__toggle-icon ${isOpen ? 'why-card__toggle-icon--open' : ''}`} />
-        {isOpen ? 'Show less' : 'Learn more'}
+        {isOpen ? t('Show less') : t('Learn more')}
       </span>
     </button>
   );

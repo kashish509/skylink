@@ -4,6 +4,8 @@ import {
   Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, Moon, CloudMoon,
 } from 'lucide-react';
 
+import { tr } from '../i18n';
+
 const API = 'https://api.open-meteo.com/v1/forecast';
 const TTL = 10 * 60 * 1000; // re-use a city's forecast for 10 minutes
 const cache = new Map();
@@ -31,7 +33,7 @@ export function formatTemp(c, unit) {
 
 export function formatWind(kmh, unit) {
   if (kmh === null || kmh === undefined) return '–';
-  return unit === 'F' ? `${Math.round(kmh * 0.621371)} mph` : `${Math.round(kmh)} km/h`;
+  return unit === 'F' ? `${Math.round(kmh * 0.621371)} ${tr('mph')}` : `${Math.round(kmh)} ${tr('km/h')}`;
 }
 
 // Short, practical packing advice from the current conditions and the week ahead.

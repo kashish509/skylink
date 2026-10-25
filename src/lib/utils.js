@@ -1,3 +1,5 @@
+import { getLang } from '../i18n';
+
 // Shared helpers: id/PNR generation, validation, pricing, seat maps, dates.
 
 export function uid(prefix = 'id') {
@@ -30,7 +32,9 @@ export function validateEmail(email) {
 }
 
 export function validatePhone(phone) {
-  return /^[0-9]{10}$/.test((phone || '').replace(/\D/g, ''));}
+  // Indian mobile numbers: 10 digits, first digit 6, 7, 8 or 9.
+  return /^[6-9][0-9]{9}$/.test((phone || '').replace(/\D/g, ''));
+}
 
 
 export function addDays(date, days) {
@@ -46,7 +50,7 @@ export function toDateInput(date) {
 export function formatDate(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d)) return dateStr;
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(getLang() === 'hi' ? 'hi-IN' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export function combineDateTime(dateStr, timeStr) {

@@ -16,6 +16,7 @@ import FaqSection from './components/FaqSection';
 import ErrorBoundary from './components/ErrorBoundary';
 import { TermsPage, PrivacyPage, RefundsPage, ContactPage, NotFoundPage } from './components/InfoPages';
 import { isAdmin } from './lib/admin';
+import { LangProvider, LanguageSwitch, useLang } from './i18n';
 import './styles.css';
 
 const navLinks = [
@@ -23,10 +24,11 @@ const navLinks = [
   { href: '#destinations', label: 'Destinations' },
   { href: '#weather', label: 'Weather' },
   { href: '#experience', label: 'Experience' },
-];
+]; // labels are translated where rendered
 
 function Nav({ menu, setMenu }) {
   const app = useApp();
+  const { t } = useLang();
   const [accountOpen, setAccountOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const user = app.currentUser;
@@ -48,16 +50,17 @@ function Nav({ menu, setMenu }) {
       <nav className="site-nav">
         {navLinks.map((l) => (
           <a key={l.href} href={l.href} className="site-nav__link">
-            {l.label}
+            {t(l.label)}
           </a>
         ))}
         <button className="site-nav__button" onClick={() => app.setEnquiryOpen(true)}>
-          Track Booking
+          {t('Track Booking')}
         </button>
-        <a href="#footer" className="site-nav__link">Support</a>
+        <a href="#footer" className="site-nav__link">{t('Support')}</a>
       </nav>
 
       <div className="site-header__actions">
+        <LanguageSwitch />
         {user ? (
           <div className="account-menu">
             <button
@@ -67,12 +70,12 @@ function Nav({ menu, setMenu }) {
               <UserRound size={15} className="icon-ice" /> {user.firstName} <ChevronDown size={13} className={`account-trigger__chevron ${accountOpen ? 'account-trigger__chevron--open' : ''}`} />
             </button>
             <AccountDropdown open={accountOpen}>
-              <DropdownItem icon={<Ticket size={14} />} onClick={() => { app.setProfileOpen(true); setAccountOpen(false); }}>My Bookings</DropdownItem>
-              <DropdownItem icon={<Ticket size={14} />} onClick={() => { app.setEnquiryOpen(true); setAccountOpen(false); }}>Track / Cancel by PNR</DropdownItem>
+              <DropdownItem icon={<Ticket size={14} />} onClick={() => { app.setProfileOpen(true); setAccountOpen(false); }}>{t('My Bookings')}</DropdownItem>
+              <DropdownItem icon={<Ticket size={14} />} onClick={() => { app.setEnquiryOpen(true); setAccountOpen(false); }}>{t('Track / Cancel by PNR')}</DropdownItem>
               {isAdmin(user) && (
-                <DropdownItem icon={<LayoutDashboard size={14} />} onClick={() => { window.location.hash = '#/admin'; setAccountOpen(false); }}>Admin Dashboard</DropdownItem>
+                <DropdownItem icon={<LayoutDashboard size={14} />} onClick={() => { window.location.hash = '#/admin'; setAccountOpen(false); }}>{t('Admin Dashboard')}</DropdownItem>
               )}
-              <DropdownItem icon={<LogOut size={14} />} onClick={() => { app.logout(); setAccountOpen(false); }}>Logout</DropdownItem>
+              <DropdownItem icon={<LogOut size={14} />} onClick={() => { app.logout(); setAccountOpen(false); }}>{t('Logout')}</DropdownItem>
             </AccountDropdown>
           </div>
         ) : (
@@ -80,7 +83,7 @@ function Nav({ menu, setMenu }) {
             className="signin-btn"
             onClick={() => app.setAuthModal('signin')}
           >
-            <UserRound size={15} /> Sign In
+            <UserRound size={15} /> {t('Sign In')}
           </button>
         )}
 
@@ -89,13 +92,13 @@ function Nav({ menu, setMenu }) {
           className="book-cta"
           onClick={() => setMenu(false)}
         >
-          Book a Flight <ArrowRight size={14} />
+          {t('Book a Flight')} <ArrowRight size={14} />
         </a>
 
         <button
           className="menu-toggle"
           onClick={() => setMenu(!menu)}
-          aria-label="Menu"
+          aria-label={t('Menu')}
         >
           {menu ? <X /> : <Menu />}
         </button>
@@ -105,24 +108,25 @@ function Nav({ menu, setMenu }) {
         <nav className="mobile-nav anim-drop-in">
           {navLinks.map((l) => (
             <a key={l.href} href={l.href} className="mobile-nav__link" onClick={() => setMenu(false)}>
-              {l.label}
+              {t(l.label)}
             </a>
           ))}
           <button className="mobile-nav__link" onClick={() => { app.setEnquiryOpen(true); setMenu(false); }}>
-            Track Booking
+            {t('Track Booking')}
           </button>
-          <a href="#footer" className="mobile-nav__link" onClick={() => setMenu(false)}>Support</a>
+          <a href="#footer" className="mobile-nav__link" onClick={() => setMenu(false)}>{t('Support')}</a>
+          <LanguageSwitch className="lang-switch--mobile" />
           <div className="mobile-nav__divider" />
           {user ? (
             <>
-              <button className="mobile-nav__link" onClick={() => { app.setProfileOpen(true); setMenu(false); }}>My Bookings</button>
+              <button className="mobile-nav__link" onClick={() => { app.setProfileOpen(true); setMenu(false); }}>{t('My Bookings')}</button>
               {isAdmin(user) && (
-                <button className="mobile-nav__link" onClick={() => { window.location.hash = '#/admin'; setMenu(false); }}>Admin Dashboard</button>
+                <button className="mobile-nav__link" onClick={() => { window.location.hash = '#/admin'; setMenu(false); }}>{t('Admin Dashboard')}</button>
               )}
-              <button className="mobile-nav__link" onClick={() => { app.logout(); setMenu(false); }}>Logout</button>
+              <button className="mobile-nav__link" onClick={() => { app.logout(); setMenu(false); }}>{t('Logout')}</button>
             </>
           ) : (
-            <button className="mobile-nav__link" onClick={() => { app.setAuthModal('signin'); setMenu(false); }}>Sign In</button>
+            <button className="mobile-nav__link" onClick={() => { app.setAuthModal('signin'); setMenu(false); }}>{t('Sign In')}</button>
           )}
         </nav>
       )}
@@ -152,6 +156,7 @@ function DropdownItem({ icon, onClick, children }) {
 
 function Toast() {
   const app = useApp();
+  const { t } = useLang();
   const [shown, setShown] = useState(null);
   const [leaving, setLeaving] = useState(false);
 
@@ -170,7 +175,7 @@ function Toast() {
   if (!shown) return null;
   return (
     <div key={shown.key} className={`glass toast ${leaving ? 'anim-toast-out' : 'anim-toast-in'}`}>
-      {shown.message}
+      {t(shown.message)}
     </div>
   );
 }
@@ -178,10 +183,11 @@ function Toast() {
 
 
 function App() {
+  const { t } = useLang();
   const [menu, setMenu] = useState(false);
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main">Skip to content</a>
+      <a className="skip-link" href="#main">{t('Skip to content')}</a>
       <Nav menu={menu} setMenu={setMenu} />
       <main id="main">
         <CinematicHero />
@@ -222,8 +228,10 @@ function Root() {
 
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
-    <AppProvider>
-      <Root />
-    </AppProvider>
+    <LangProvider>
+      <AppProvider>
+        <Root />
+      </AppProvider>
+    </LangProvider>
   </ErrorBoundary>
 );
